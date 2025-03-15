@@ -35,14 +35,17 @@
         async function fetchCelebrities() {
             let today = new Date();
             let formattedDate = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
-            let response = await fetch(`https://en.wikipedia.org/api/rest_v1/feed/featured/${formattedDate}`);
+            let response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/view/popular/all-access/${formattedDate}`);
+
+            if (!response.ok) {
+                console.error("Wikipedia API failed:", response.status);
+                return;
+            }
+
             let data = await response.json();
-            let articles = data.mostread.articles;
-            
-            let celebrities = articles.filter(article => isLikelyCelebrity(article.normalizedtitle));
-            
-            let enrichedCelebrities = await fetchAdditionalData(celebrities);
-            displayCelebrities(enrichedCelebrities);
+            let articles = data.items[0].articles;
+            let celebrities = articles.filter(article => isLikelyCelebrity(article.article));
+            displayCelebrities(celebrities);
         }
 
         function isLikelyCelebrity(name) {
@@ -50,46 +53,17 @@
             return keywords.some(keyword => name.toLowerCase().includes(keyword));
         }
 
-        async function fetchAdditionalData(celebrities) {
-            return Promise.all(celebrities.map(async (celeb) => {
-                let twitterFollowers = await fetchTwitterFollowers(celeb.normalizedtitle);
-                let instagramFollowers = await fetchInstagramFollowers(celeb.normalizedtitle);
-                let googleSearches = await fetchGoogleTrends(celeb.normalizedtitle);
-                
-                return {
-                    rank: celebrities.indexOf(celeb) + 1,
-                    name: celeb.normalizedtitle,
-                    views: celeb.views,
-                    twitterFollowers: twitterFollowers || 'N/A',
-                    instagramFollowers: instagramFollowers || 'N/A',
-                    googleSearches: googleSearches || 'N/A'
-                };
-            }));
-        }
-
-        async function fetchTwitterFollowers(name) {
-            return null; // Placeholder: Replace with Twitter API fetch
-        }
-
-        async function fetchInstagramFollowers(name) {
-            return null; // Placeholder: Replace with Instagram API fetch
-        }
-
-        async function fetchGoogleTrends(name) {
-            return null; // Placeholder: Replace with Google Trends API fetch
-        }
-
         function displayCelebrities(data) {
             let list = document.getElementById('celebrity-list');
             list.innerHTML = '';
-            data.forEach((celeb) => {
+            data.forEach((celeb, index) => {
                 let row = `<tr>
-                    <td>${celeb.rank}</td>
-                    <td>${celeb.name}</td>
+                    <td>${index + 1}</td>
+                    <td>${celeb.article}</td>
                     <td>${celeb.views}</td>
-                    <td>${celeb.twitterFollowers}</td>
-                    <td>${celeb.instagramFollowers}</td>
-                    <td>${celeb.googleSearches}</td>
+                    <td>N/A</td>
+                    <td>N/A</td>
+                    <td>N/A</td>
                 </tr>`;
                 list.innerHTML += row;
             });
