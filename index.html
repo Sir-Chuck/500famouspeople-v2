@@ -30,7 +30,9 @@
     
     <script>
         async function fetchCelebrities() {
-            let response = await fetch('https://en.wikipedia.org/api/rest_v1/feed/featured/2024/03/10');
+            let today = new Date();
+            let formattedDate = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
+            let response = await fetch(`https://en.wikipedia.org/api/rest_v1/feed/featured/${formattedDate}`);
             let data = await response.json();
             let celebrities = data.mostread.articles.map((article, index) => ({
                 rank: index + 1,
