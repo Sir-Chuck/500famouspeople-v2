@@ -6,8 +6,8 @@
     <title>Top 500 Celebrities</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
-        .celebrity-table { width: 80%; margin: auto; border-collapse: collapse; }
-        .celebrity-table th, .celebrity-table td { padding: 10px; border: 1px solid #ddd; }
+        .celebrity-table { width: 90%; margin: auto; border-collapse: collapse; }
+        .celebrity-table th, .celebrity-table td { padding: 10px; border: 1px solid #ddd; text-align: left; }
         .celebrity-table th { background-color: #f4f4f4; cursor: pointer; }
         .search-bar { margin-bottom: 20px; padding: 10px; width: 50%; }
     </style>
@@ -20,7 +20,10 @@
             <tr>
                 <th onclick="sortTable(0)">Rank</th>
                 <th onclick="sortTable(1)">Name</th>
-                <th onclick="sortTable(2)">Views</th>
+                <th onclick="sortTable(2)">Wikipedia Views</th>
+                <th onclick="sortTable(3)">X Followers</th>
+                <th onclick="sortTable(4)">Instagram Followers</th>
+                <th onclick="sortTable(5)">Google Searches</th>
             </tr>
         </thead>
         <tbody id="celebrity-list">
@@ -34,12 +37,46 @@
             let formattedDate = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
             let response = await fetch(`https://en.wikipedia.org/api/rest_v1/feed/featured/${formattedDate}`);
             let data = await response.json();
-            let celebrities = data.mostread.articles.map((article, index) => ({
-                rank: index + 1,
-                name: article.normalizedtitle,
-                views: article.views,
+            let articles = data.mostread.articles;
+            
+            let celebrities = articles.filter(article => isLikelyCelebrity(article.normalizedtitle));
+            
+            let enrichedCelebrities = await fetchAdditionalData(celebrities);
+            displayCelebrities(enrichedCelebrities);
+        }
+
+        function isLikelyCelebrity(name) {
+            const keywords = ['actor', 'singer', 'musician', 'athlete', 'politician', 'artist', 'influencer', 'rapper', 'director', 'model'];
+            return keywords.some(keyword => name.toLowerCase().includes(keyword));
+        }
+
+        async function fetchAdditionalData(celebrities) {
+            return Promise.all(celebrities.map(async (celeb) => {
+                let twitterFollowers = await fetchTwitterFollowers(celeb.normalizedtitle);
+                let instagramFollowers = await fetchInstagramFollowers(celeb.normalizedtitle);
+                let googleSearches = await fetchGoogleTrends(celeb.normalizedtitle);
+                
+                return {
+                    rank: celebrities.indexOf(celeb) + 1,
+                    name: celeb.normalizedtitle,
+                    views: celeb.views,
+                    twitterFollowers: twitterFollowers || 'N/A',
+                    instagramFollowers: instagramFollowers || 'N/A',
+                    googleSearches: googleSearches || 'N/A'
+                };
             }));
-            displayCelebrities(celebrities);
+        }
+
+        async function fetchTwitterFollowers(name) {
+            return null; // Placeholder: Replace with Twitter API fetch
+        }
+
+        async function fetchInstagramFollowers(name) {
+            return null; // Placeholder: Replace with Instagram API fetch
+        }
+
+        async function fetchGoogleTrends(name) {
+            return null; // Placeholder: Replace with Google Trends API fetch
         }
 
         function displayCelebrities(data) {
@@ -50,6 +87,9 @@
                     <td>${celeb.rank}</td>
                     <td>${celeb.name}</td>
                     <td>${celeb.views}</td>
+                    <td>${celeb.twitterFollowers}</td>
+                    <td>${celeb.instagramFollowers}</td>
+                    <td>${celeb.googleSearches}</td>
                 </tr>`;
                 list.innerHTML += row;
             });
