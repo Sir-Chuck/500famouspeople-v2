@@ -33,10 +33,8 @@
     
     <script>
         async function fetchCelebrities() {
-            let today = new Date();
-            let formattedDate = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
-            let response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/view/popular/all-access/${formattedDate}`);
-
+            let response = await fetch('https://wikimedia.org/api/rest_v1/metrics/pageviews/top/en.wikipedia/all-access/2024/03/10');
+            
             if (!response.ok) {
                 console.error("Wikipedia API failed:", response.status);
                 return;
